@@ -21,8 +21,10 @@ public class SignAPI {
                 UUID uuid = event.getPlayer().getUniqueId();
 
                 if (!openGUIs.containsKey(uuid)) return;
-                openGUIs.get(uuid).method(event.getPlayer(), event.getPacket().getStringArrays().read(0));
+                SignGUI.onClose closeEvent = openGUIs.get(uuid);
+                
                 openGUIs.remove(uuid);
+                closeEvent.method(event.getPlayer(), event.getPacket().getStringArrays().read(0));
             }
         });
     }
