@@ -4,6 +4,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
@@ -12,19 +13,25 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SignAPI {
-    private final Map<UUID, SignGUI.onClose> openGUIs = new HashMap<>();
+    private final Map<UUID, SignTask> openGUIs = new HashMap<>();
+    private final Async2Sync async2Sync;
 
     public SignAPI(JavaPlugin plugin) {
+        async2Sync = new Async2Sync(plugin);
+
         ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin, PacketType.Play.Client.UPDATE_SIGN) {
             @Override
             public void onPacketReceiving(PacketEvent event) {
-                UUID uuid = event.getPlayer().getUniqueId();
+                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                    UUID uuid = event.getPlayer().getUniqueId();
+                    if (!openGUIs.containsKey(uuid)) return;
 
-                if (!openGUIs.containsKey(uuid)) return;
-                SignGUI.onClose closeEvent = openGUIs.get(uuid);
-                
-                openGUIs.remove(uuid);
-                closeEvent.method(event.getPlayer(), event.getPacket().getStringArrays().read(0));
+                    SignTask signTask = openGUIs.get(uuid);
+                    signTask.setLines(event.getPacket().getStringArrays().read(0));
+
+                    openGUIs.remove(uuid);
+                    async2Sync.add(signTask);
+                }, 0);
             }
         });
     }

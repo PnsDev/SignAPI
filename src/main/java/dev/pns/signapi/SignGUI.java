@@ -17,10 +17,10 @@ import java.util.UUID;
 public class SignGUI {
     private final onClose onClose;
     private final List<String> text;
-    private final Map<UUID, onClose> openGUIs;
+    private final Map<UUID, SignTask> openGUIs;
     private final ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
 
-    public SignGUI(Map<UUID, onClose> openGUIs, List<String> text, onClose closeFunction) {
+    public SignGUI(Map<UUID, SignTask> openGUIs, List<String> text, onClose closeFunction) {
         this.openGUIs = openGUIs;
         this.text = text;
         this.onClose = closeFunction;
@@ -59,7 +59,7 @@ public class SignGUI {
         sendPacket(player, packet);
 
         // Store the method to be called when the sign is closed
-        openGUIs.put(player.getUniqueId(), onClose);
+        openGUIs.put(player.getUniqueId(), new SignTask(player, onClose, player.getWorld().getBlockAt(bp.getX(), bp.getY(), bp.getZ())));
     }
 
     public interface onClose {
